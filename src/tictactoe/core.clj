@@ -1,6 +1,10 @@
 (ns tictactoe.core
   (:gen-class))
 
+;;; Utility
+
+(defn in? [item coll]
+  (some #(= item %) coll))
 
 ;;; I/O
 
@@ -22,9 +26,8 @@
 
 ;;; Players 
 
-(def players {:x {:name "X" :symbol "X"}
-              :o {:name "O" :symbol "O"}})
-
+(def players {:x {:name "1" :mark "X"}
+              :o {:name "2" :mark "O"}})
 
 ;;; Board Functions
 
@@ -72,6 +75,21 @@
 (defn place-on-board [board spot mark] 
   (assoc board spot mark))
 
+(defn- get-next-move [board player]
+  (println)
+  (println (board-str board))
+  (user-prompt (str "\nPlayer " (player :name) ", pick your space (1-9): "))
+  (let [input (read-int)]
+    (if (in? input (range 1 9))
+      (dec input)
+      (recur board player))))
+
+(defn- move [board player]
+  (let [move (get-next-move board player)]
+    (if (valid-move? board move)
+      (place-on-board board move (:mark player))
+      (recur board player))))
+
 (defn- instructions-str []
   (str "\n"
     "Welcome to Tic-Tac-Toe!\n\n"
@@ -79,18 +97,17 @@
     (board-str (vec (range 1 10)))
     "\n"))
 
-(defn- next-move [board player]
-  )
-
 ;;; Driver
 
 (defn console-play []
   (println (instructions-str))
-  (loop [board (make-board) current-player (:x players) next-player (:y players)]
-    (println (board-str board))
+  (loop [board (make-board) current-player (:x players) next-player (:o players)]
     (if (game-over? board)
-      (final-message board)
-      (recur (next-move board current-player) next-player current-player))))
+      (do
+        (println (str "\n" (final-message board) "\n"))
+        (println (board-str board)))
+      (recur
+        (move board current-player) next-player current-player))))
 
 (defn -main [& args]
   (console-play))
